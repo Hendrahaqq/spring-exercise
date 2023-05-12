@@ -24,9 +24,16 @@ public class EmployeeController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Employee>> getAllEmployees() {
+    public ResponseEntity<?> getAllEmployees() {
         List<Employee> employees = employeeRepository.findAll();
-        return ResponseEntity.ok(employees);
+        if(employees.size() != 0){
+            return ResponseEntity.ok(employees);
+        } else {
+            String errorMessage = "No Data Found";
+            CustomErrorResponse errorResponse = new CustomErrorResponse(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), errorMessage);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
+
     }
 
     @PostMapping
@@ -48,7 +55,7 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Employee> updateEmployee(@PathVariable Long id, @RequestBody Employee updatedEmployee) {
+    public ResponseEntity<?> updateEmployee(@PathVariable Long id, @RequestBody Employee updatedEmployee) {
         Employee employee = employeeRepository.findById(id).orElse(null);
         if (employee != null) {
             employee.setFirstName(updatedEmployee.getFirstName());
@@ -58,14 +65,29 @@ public class EmployeeController {
             Employee savedEmployee = employeeRepository.save(employee);
             return ResponseEntity.ok(savedEmployee);
         } else {
-            return ResponseEntity.notFound().build();
+            String errorMessage = "Employee with ID " + id + " not found.";
+            CustomErrorResponse errorResponse = new CustomErrorResponse(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), errorMessage);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
-        employeeRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> deleteEmployee(@PathVariable Long id) {
+//        employeeRepository.deleteById(id);
+//        return ResponseEntity.noContent().build();
+
+        Employee employee = employeeRepository.findById(id).orElse(null);
+        if (employee != null) {
+            employeeRepository.deleteById(id);
+//            return ResponseEntity.noContent().build();
+            String errorMessage = "Employee with ID " + id + " deleted successfully.";
+            CustomErrorResponse res = new CustomErrorResponse(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(), errorMessage);
+            return ResponseEntity.status(HttpStatus.OK).body(res);
+        } else {
+            String errorMessage = "Employee with ID " + id + " not found.";
+            CustomErrorResponse errorResponse = new CustomErrorResponse(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), errorMessage);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
     }
 }
 

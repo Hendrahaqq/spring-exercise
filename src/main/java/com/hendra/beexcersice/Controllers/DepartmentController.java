@@ -1,6 +1,8 @@
 package com.hendra.beexcersice.Controllers;
 
+import com.hendra.beexcersice.Entity.CustomErrorResponse;
 import com.hendra.beexcersice.Entity.Department;
+import com.hendra.beexcersice.Entity.Employee;
 import com.hendra.beexcersice.Repository.DepartmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,9 +22,16 @@ public class DepartmentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Department>> getAllDepartments() {
+    public ResponseEntity<?> getAllDepartments() {
         List<Department> departments = departmentRepository.findAll();
-        return ResponseEntity.ok(departments);
+        if(departments.size() != 0){
+            return ResponseEntity.ok(departments);
+        }else {
+            String errorMessage = "No Data Found";
+            CustomErrorResponse errorResponse = new CustomErrorResponse(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), errorMessage);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
+
     }
 
     @PostMapping
@@ -32,31 +41,43 @@ public class DepartmentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Department> getDepartmentById(@PathVariable Long id) {
+    public ResponseEntity<?> getDepartmentById(@PathVariable Long id) {
         Department department = departmentRepository.findById(id).orElse(null);
         if (department != null) {
             return ResponseEntity.ok(department);
         } else {
-
-            return ResponseEntity.notFound().build();
+            String errorMessage = "Department with ID " + id + " not found.";
+            CustomErrorResponse errorResponse = new CustomErrorResponse(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), errorMessage);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Department> updateDepartment(@PathVariable Long id, @RequestBody Department updatedDepartment) {
+    public ResponseEntity<?> updateDepartment(@PathVariable Long id, @RequestBody Department updatedDepartment) {
         Department department = departmentRepository.findById(id).orElse(null);
         if (department != null) {
             department.setName(updatedDepartment.getName());
             Department savedDepartment = departmentRepository.save(department);
             return ResponseEntity.ok(savedDepartment);
         } else {
-            return ResponseEntity.notFound().build();
+            String errorMessage = "Department with ID " + id + " not found.";
+            CustomErrorResponse errorResponse = new CustomErrorResponse(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), errorMessage);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {
-        departmentRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> deleteDepartment(@PathVariable Long id) {
+        Department department = departmentRepository.findById(id).orElse(null);
+        if (department != null) {
+            departmentRepository.deleteById(id);
+            String errorMessage = "Department with ID " + id + " deleted successfully.";
+            CustomErrorResponse res = new CustomErrorResponse(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(), errorMessage);
+            return ResponseEntity.status(HttpStatus.OK).body(res);
+        } else {
+            String errorMessage = "Department with ID " + id + " not found.";
+            CustomErrorResponse errorResponse = new CustomErrorResponse(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), errorMessage);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
     }
 }
